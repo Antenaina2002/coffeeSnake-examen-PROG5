@@ -3,36 +3,44 @@ package com.STD22073.model;
 import java.util.*;
 
 public class Snake {
-    private final List<Point> body;
+    private List<Point> body;
     private Direction direction;
-    private boolean shouldGrow;
+    private boolean growNextMove = false;
 
-    public Snake(List<Point> initialBody, Direction initialDirection) {
-        this.body = new ArrayList<>(initialBody);
-        this.direction = initialDirection;
-        this.shouldGrow = false;
+    public Snake(List<Point> body, Direction direction) {
+        this.body = new ArrayList<>(body);
+        this.direction = direction;
+    }
+
+    public void setDirection(Direction direction) {
+        if ((this.direction == Direction.UP && direction == Direction.DOWN) ||
+                (this.direction == Direction.DOWN && direction == Direction.UP) ||
+                (this.direction == Direction.LEFT && direction == Direction.RIGHT) ||
+                (this.direction == Direction.RIGHT && direction == Direction.LEFT)) {
+            return;
+        }
+        this.direction = direction;
     }
 
     public void move() {
         Point head = getHead();
-        Point newHead = head.add(direction.getDelta());
-        body.add(0, newHead);
+        Point newHead = switch (direction) {
+            case UP -> new Point(head.getX(), head.getY() - 1);
+            case DOWN -> new Point(head.getX(), head.getY() + 1);
+            case LEFT -> new Point(head.getX() - 1, head.getY());
+            case RIGHT -> new Point(head.getX() + 1, head.getY());
+        };
 
-        if (!shouldGrow) {
+        body.add(0, newHead);
+        if (!growNextMove) {
             body.remove(body.size() - 1);
         } else {
-            shouldGrow = false;
+            growNextMove = false;
         }
     }
 
     public void grow() {
-        shouldGrow = true;
-    }
-
-    public void changeDirection(Direction newDirection) {
-        if (newDirection != direction.getOpposite()) {
-            direction = newDirection;
-        }
+        growNextMove = true;
     }
 
     public Point getHead() {
@@ -40,29 +48,10 @@ public class Snake {
     }
 
     public List<Point> getBody() {
-        return Collections.unmodifiableList(body);
+        return new ArrayList<>(body);
     }
 
-    public boolean isCollidingWithItself() {
-        Point head = getHead();
-        return body.subList(1, body.size()).contains(head);
-    }
-
-    public boolean isCollidingWithWalls(int gridWidth, int gridHeight) {
-        Point head = getHead();
-        return head.getX() < 0 || head.getX() >= gridWidth ||
-                head.getY() < 0 || head.getY() >= gridHeight;
-    }
-
-    public boolean isEatingFood(Point food) {
-        return getHead().equals(food);
-    }
-
-    public int getLength() {
-        return body.size();
-    }
-
-    public Direction getDirection() {
-        return direction;
+    public boolean contains(Point point) {
+        return body.contains(point);
     }
 }
